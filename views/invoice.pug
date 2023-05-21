@@ -1,0 +1,49 @@
+extends layout
+
+block content 
+  h1 Invoice
+  h4 Invoice Number: #{invoiceNumber} 
+
+  table 
+    thead 
+      tr 
+        th Diterbitkan oleh
+        th Untuk
+    tbody 
+      tr 
+        td Penjual: ASDASH STORE 
+        td Pembeli: #{buyer}
+      tr
+        td Alamat: Jl. asdaj no 123 asbdasbs 
+        td Tanggal Pembelian: #{orderDate} 
+      tr
+        td
+        td Alamat Pengiriman: 
+            b #{deliveryAddress.label}, 
+            | #{deliveryAddress.detail}, #{deliveryAddress.kelurahan},
+            | #{deliveryAddress.kecamatan}, #{deliveryAddress.kota}, #{deliveryAddress.provinsi}
+
+    thead
+      tr 
+        th Info Produk 
+        th Jumlah 
+        th Harga Satuan 
+        th Total Harga
+    tbody 
+      each item in items
+        tr 
+          td= item.name 
+          td= item.quantity 
+          td= item.price 
+          td= item.price * item.quantity 
+    tbody 
+      tr 
+        td 
+        td
+        td
+        td= totalPrice 
+
+  footer 
+    small Thank you for choosing us! 
+    br
+    small Hubungi 0192370 jika anda butuh bantuan
