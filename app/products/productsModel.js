@@ -20,10 +20,10 @@ const productSchema = mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
     },
-    tags: {
+    tags: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: "Tag",
-    }
+    }]
   },
   { timestamps: true }
 );

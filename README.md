@@ -25,6 +25,7 @@ This project use:
 	With request body:
 
 		{
+			full_name: user full name
 			email: userEmail@email.com,
 			password: userpassword,
 			role: user or admin (default: user)
@@ -82,7 +83,7 @@ Add, update, delete is **restricted** to user with **admin** role only.
 			price: 9999,
 			image: image.jpg (file),
 			category: categoryName,
-			tags: tagName
+			tags[]: tagName
 		}
 
 	Allowed image format:

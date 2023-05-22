@@ -72,7 +72,7 @@ const store = async (req, res) => {
 
   if (payload.tags && payload.tags.length > 0) { // Handling tags field
     try {
-      const tags = await Tags.find({name: {$in: payload.tags}});
+      const tags = await Tags.find({name: {$regex: new RegExp(payload.tags.join('|'), 'i')}});
       if (tags.length > 0) {
         payload = {...payload, tags: tags.map(tag => tag._id)};
       } else {
