@@ -222,9 +222,11 @@ Admin is the only one who can do update on orders, and it's only for updating de
 	GET `/api/order`
 
 - ##### Add order
-	POST `/api/order`
+	POST `/api/order` with body:
 
-	This POST request does not require request body, because all needed data is retrieved from document in Cart collection.
+		{
+			delivery_address: addressId
+		}
 
 - ##### Update order
 	PUT `/api/order/[order-id]` with body:
@@ -242,6 +244,8 @@ Admin is the only one who can do update on orders, and it's only for updating de
 	DELETE `/api/order/[order-id]`
 
 #### Invoice
+
+For now, the invoice is not styled yet. Stylings will be implemented in future.
 
 Invoice is rendered with pug using data from Order.
 
