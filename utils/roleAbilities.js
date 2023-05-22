@@ -3,8 +3,6 @@ const { AbilityBuilder, createMongoAbility } = require("@casl/ability");
 function defineAbilityFor(user = {}) {
   const { can, build } = new AbilityBuilder(createMongoAbility);
 
-  console.log("ability ", user._id)
-
   if (user.role === "user") {
     can("create", "Cart");
     can("read", "Cart");

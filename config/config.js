@@ -9,4 +9,7 @@ module.exports = {
   secretKey: process.env.SECRET_KEY,
   dbName: process.env.DB_NAME,
   dbURI: process.env.DB_URI,
+  cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME,
+  cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
+  cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,
 };

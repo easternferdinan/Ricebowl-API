@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const cloudinary = require("../../config/cloudinary");
 const { rootPath } = require("../../config/config");
 
 const Products = require("./productsModel");
@@ -85,6 +86,7 @@ const store = async (req, res) => {
 
   if (req.file) { // Processing request with image
     const tempPath = req.file.path;
+    const fileName = req.file.filename;
 
     // Splitting the file extension from the rest of the original name and then validating it
     // whether it's a jpg, jpeg, png, or gif.
@@ -99,36 +101,28 @@ const store = async (req, res) => {
       })
     }
 
-    const fileName = req.file.filename + "." + fileExtension;
-    const targetPath = path.resolve(rootPath, `public/images/products/${fileName}`);
+    try {
+      const uploadedImage = await cloudinary.uploader.upload(tempPath, {
+        public_id: fileName,
+        folder: "/products-images/"
+      });
 
-    const src = fs.createReadStream(tempPath);
-    const dest = fs.createWriteStream(targetPath);
-    src.pipe(dest);
-
-    src.on("end", async () => {
-      try {
-        const products = new Products({...payload, image_url: fileName});
-        await products.save();
-        return res.status(201).json(products);
-      } catch(error) {
-        fs.unlinkSync(targetPath);
-        if (error && error.name === "ValidationError"){
-          return res.status(422).json({
-            code: 422,
-            error: "Unprocessable entity",
-            message: error.message,
-            detail: error.errors,
-          })
-        } else {
-          return res.status(500).json(error);
-        }
+      const products = new Products({...payload, image_url: uploadedImage.secure_url});
+      await products.save();
+      return res.status(201).json(products);
+      
+    } catch (error) {
+      if (error && error.name === "ValidationError"){
+        return res.status(422).json({
+          code: 422,
+          error: "Unprocessable entity",
+          message: error.message,
+          detail: error.errors,
+        });
+      } else {
+        return res.status(500).json(error);
       }
-    });
-
-    src.on("error", async (error) => {
-      return res.status(500).json(error);
-    });
+    }
 
   } else { // Processing request without image
     try {
@@ -152,7 +146,6 @@ const store = async (req, res) => {
 
 const update = async (req, res) => {
   let payload = req.body
-  const id = req.params.id
 
   if (payload.category) { // Handling category field
     try {
@@ -184,6 +177,7 @@ const update = async (req, res) => {
 
   if (req.file) { // Processing request with image
     const tempPath = req.file.path;
+    const fileName = req.file.filename;
 
     // Splitting the file extension from the rest of the original name and then validating it
     // whether it's a jpg, jpeg, png, or gif.
@@ -198,49 +192,44 @@ const update = async (req, res) => {
       })
     }
 
-    const fileName = req.file.filename + "." + fileExtension;
-    const targetPath = path.resolve(rootPath, `public/images/products/${fileName}`);
+    try {
+      const existingProduct = await Products.findById(req.params.id);
 
-    const src = fs.createReadStream(tempPath);
-    const dest = fs.createWriteStream(targetPath);
-    src.pipe(dest);
-
-    src.on("end", async () => {
-      try {
-        let products = await Products.findById(id);
-
-        const currentImage = `${rootPath}/public/images/products/${products.image_url}`;
-        if (fs.existsSync(currentImage)) {
-          fs.unlinkSync(currentImage);
-        }
-
-        products = await Products.findByIdAndUpdate(id, { ...payload, image_url: fileName}, {
-          new: true,
-          runValidators: true,
+      if (existingProduct.image_url) { // Removing existing image on cloud if exist
+        const imagePublicId = existingProduct.image_url.match(/(products-images\/[^\/.]+)/)[1];
+        await cloudinary.uploader.destroy(imagePublicId, {
+          invalidate: true
         });
-        return res.status(201).json(products);
-      } catch(error) {
-        fs.unlinkSync(targetPath);
-        if (error && error.name === "ValidationError"){
-          return res.status(422).json({
-            code: 422,
-            error: "Unprocessable entity",
-            message: error.message,
-            detail: error.errors,
-          })
-        } else {
-          return res.status(500).json(error);
-        }
       }
-    });
 
-    src.on("error", async (error) => {
-      return res.status(500).json(error);
-    });
+      const newImage = await cloudinary.uploader.upload(tempPath, {
+        public_id: fileName,
+        folder: "/products-images/"
+      });
+
+      const updatedProducts = await Products.findByIdAndUpdate(req.params.id, { ...payload, image_url: newImage.secure_url}, {
+        new: true,
+        runValidators: true,
+      });
+
+      return res.status(201).json(updatedProducts);
+
+    } catch (error) {
+      if (error && error.name === "ValidationError"){
+        return res.status(422).json({
+          code: 422,
+          error: "Unprocessable entity",
+          message: error.message,
+          detail: error.errors,
+        })
+      } else {
+        return res.status(500).json(error);
+      }
+    }
 
   } else { // Processing request without image
     try {
-      const products = await Products.findByIdAndUpdate(id, payload, {
+      const products = await Products.findByIdAndUpdate(req.params.id, payload, {
         new: true,
         runValidators: true,
       });
@@ -262,14 +251,17 @@ const update = async (req, res) => {
 
 const destroy = async (req, res) => {
   try {
-    const products = await Products.findByIdAndDelete(req.params.id);
+    const existingProduct = await Products.findByIdAndDelete(req.params.id);
 
-    const currentImage = `${rootPath}/public/images/products/${products.image_url}`;
-    if (fs.existsSync(currentImage)) {
-      fs.unlinkSync(currentImage);
+    if (existingProduct.image_url) { // Removing existing image on cloud if exist
+      const imagePublicId = existingProduct.image_url.match(/(products-images\/[^\/.]+)/)[1];
+      await cloudinary.uploader.destroy(imagePublicId, {
+        invalidate: true
+      });
     }
 
-    return res.json(products);
+    return res.json(existingProduct);
+
   } catch (error) {
     return res.status(500).json(error);
   }

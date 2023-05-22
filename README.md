@@ -5,6 +5,8 @@ This RESTful web service designed to support the operations of a food store appl
 This project use:
 - Node.js v18.16.0
 - Express
+- MongoDB
+- Cloudinary
 - Pug (template engine)
 
 ## Features
@@ -24,7 +26,8 @@ This project use:
 
 		{
 			email: userEmail@email.com,
-			password: userpassword
+			password: userpassword,
+			role: user or admin (default: user)
 		}
 
 - #### Login:
@@ -77,10 +80,16 @@ Add, update, delete is **restricted** to user with **admin** role only.
 			name: productName,
 			description: productDescription,
 			price: 9999,
-			image_url: image.jpg (file),
+			image: image.jpg (file),
 			category: categoryName,
 			tags: tagName
 		}
+
+	Allowed image format:
+	- .png
+	- .jpg
+	- .jpeg
+	- .gif
 
 - ##### Update Product
 	PUT `/api/products/[product-id]` with body that specifies which field(s) is going to be updated and it's new value. Example:
@@ -88,6 +97,7 @@ Add, update, delete is **restricted** to user with **admin** role only.
 		{
 			name: productName,
 			price: 9999,
+			image: newImage.png
 		}
 
 - ##### Delete Product
@@ -179,7 +189,7 @@ All logged in users have access to every delivery address endpoints.
 
 #### Cart
 
-*Subject to changes. It's possible a controller for updating cart is  added. So user can update their cart instead of creating new cart everytime.
+*Subject to changes. It's possible a controller for updating cart is added in the future. So user can update their cart instead of creating new cart everytime.
 
 - ##### View cart
 	GET `/api/cart`
