@@ -1,4 +1,4 @@
-# Studi Kasus Back-End
+# Ricebowl API
 
 This RESTful web service designed to support the operations of a food store application. It serves as the backbone of a food store system, handling various functionalities related to managing food products, customer orders, and user authentication.
 
@@ -58,6 +58,14 @@ This project use:
   Send POST request to:
 
   `/auth/logout`
+
+  with `Authorization: Bearer [userToken]` header.
+
+- #### Get User Data
+
+  Send GET request to:
+
+  `/auth/profile`
 
   with `Authorization: Bearer [userToken]` header.
 

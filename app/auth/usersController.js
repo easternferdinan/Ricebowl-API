@@ -9,19 +9,19 @@ const register = async (req, res) => {
     const user = new Users(req.body);
     await user.save();
     return res.json(user);
-  } catch(error) {
-    if (error && error.name === "ValidationError"){
+  } catch (error) {
+    if (error && error.name === "ValidationError") {
       return res.status(422).json({
         code: 422,
         error: "Unprocessable entity",
         message: error.message,
         detail: error.errors,
-      })
+      });
     } else {
       return res.status(500).json(error);
     }
   }
-}
+};
 
 const login = (req, res, next) => {
   passport.authenticate("local", async (error, user) => {
@@ -39,7 +39,7 @@ const login = (req, res, next) => {
     const signed = jwt.sign(user, secretKey);
 
     try {
-      await Users.findByIdAndUpdate(user._id, {$push: {token: signed}});
+      await Users.findByIdAndUpdate(user._id, { $push: { token: signed } });
       return res.json({
         message: "Login berhasil",
         user,
@@ -49,47 +49,67 @@ const login = (req, res, next) => {
       return res.status(500).json(error);
     }
   })(req, res, next);
-}
+};
+
+const show = async (req, res) => {
+  if (!req.user) {
+    return res.status(500).json({ message: "No token is found" });
+  }
+
+  try {
+    const user = await Users.findById(req.user._id);
+    return res.json(user);
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+};
 
 const logout = async (req, res) => {
   try {
-    const user = await Users.findOneAndUpdate({token: {$in: req.user.token}}, {$pull: {token: req.user.token}}, {useFindAndModify: false});
-    
+    const user = await Users.findOneAndUpdate(
+      { token: { $in: req.user.token } },
+      { $pull: { token: req.user.token } },
+      { useFindAndModify: false }
+    );
+
     if (!req.user.token || !user) {
-      throw error = {
+      throw (error = {
         code: 406,
         error: "Not Acceptable",
         message: "User tidak ditemukan",
-      };
+      });
     } else {
       return res.json({
         message: "Logout berhasil",
       });
-    }    
+    }
   } catch (error) {
     return res.status(500).json(error);
   }
-}
+};
 
 const localStrategy = async (email, password, done) => {
   try {
-    const user = await Users.findOne({email}).select("-__v -createdAt -updatedAt -cart_items -token");
+    const user = await Users.findOne({ email }).select(
+      "-__v -createdAt -updatedAt -cart_items -token"
+    );
     if (!user) {
       return done();
     }
     if (bcrypt.compareSync(password, user.password)) {
-      const {password, ...userWithoutPassword} = user.toJSON();
+      const { password, ...userWithoutPassword } = user.toJSON();
       return done(null, userWithoutPassword);
     }
   } catch (error) {
     done(error);
   }
   done();
-}
+};
 
 module.exports = {
   register,
   login,
+  show,
   logout,
   localStrategy,
-}
+};
